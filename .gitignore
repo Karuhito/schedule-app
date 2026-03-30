@@ -1,5 +1,4 @@
 # Python
-# Python
 backend/__pycache__/
 backend/**/__pycache__/
 backend/*.pyc
@@ -15,3 +14,5 @@ frontend/dist/
 # OS
 .DS_Store
 
+# テスト用アカウントの情報
+userdata.txt
