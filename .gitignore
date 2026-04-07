@@ -1,6 +1,6 @@
 # Python
 backend/__pycache__/
-backend/**/__pycache__/
+backend/config/__pycache__/
 backend/*.pyc
 backend/**/*.pyc
 backend/.env

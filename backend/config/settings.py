@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from datetime import timedelta
 
 
 
@@ -105,7 +106,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ja-as'
 
 TIME_ZONE = 'UTC'
 
@@ -138,3 +139,13 @@ REST_FRAMEWORK = {
 }
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+}
+# AnthropicAPIは料金がかかるので今回は使わない。
+# ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
+
+# 代わりにGeminiの無料枠を使用する。
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
