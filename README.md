@@ -14,7 +14,7 @@ AIが優先順位を提案してくれる個人向けスケジュール管理ア
 | バックエンド | Django + Django REST Framework |
 | データベース | MySQL |
 | 認証 | Simple JWT + Google OAuth |
-| AI連携 | Anthropic API |
+| AI連携 | Gemini API |
 | フロントデプロイ | Vercel |
 | バックデプロイ | Railway / Render |
 
@@ -80,6 +80,6 @@ npm run dev
 
 - [x] 環境構築・土台づくり
 - [x] ユーザー認証
-- [ ] タスク・スケジュールのCRUD
-- [ ] AI機能の組み込み
+- [x] タスク・スケジュールのCRUD
+- [x] AI機能の組み込み
 - [ ] 習慣トラッキング・リマインダー
