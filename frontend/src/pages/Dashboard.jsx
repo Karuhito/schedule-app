@@ -30,6 +30,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [aiResult, setAiResult] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [targetDate, setTargetDate] = useState(
+    new Date().toISOString().split("T")[0] // 今日の日付をデフォルトに
+  );
 
   useEffect(() => {
     fetchTasks();
@@ -84,7 +87,8 @@ export default function Dashboard() {
     setAiLoading(true);
     setAiResult(null);
     try {
-      const res = await analyzePriorities();
+      const res = await analyzePriorities(targetDate);
+      console.log('AIレスポンス:', res.data)
       setAiResult(res.data);
     } catch (err) {
       alert("AI分析に失敗しました。タスクが登録されているか確認してください。");
@@ -130,13 +134,21 @@ export default function Dashboard() {
                 登録済みのタスクをAIが分析して優先順位を提案します
               </p>
             </div>
-            <button
-              onClick={handleAnalyze}
-              disabled={aiLoading}
-              className="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-600 transition disabled:opacity-50"
-            >
-              {aiLoading ? "分析中..." : "AIに提案してもらう"}
-            </button>
+            <div className="flex items-center gap-3">
+              <input
+                type="date"
+                className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                value={targetDate}
+                onChange={(e) => setTargetDate(e.target.value)}
+              />
+              <button
+                onClick={handleAnalyze}
+                disabled={aiLoading}
+                className="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-600 transition disabled:opacity-50"
+              >
+                {aiLoading ? "分析中..." : "AIに提案してもらう"}
+              </button>
+            </div>
           </div>
 
           {aiResult && (

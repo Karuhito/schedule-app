@@ -16,9 +16,14 @@ model = genai.GenerativeModel('gemini-2.5-flash')
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def analyze_and_prioritize(request):
+    # 対象日付をリクエストから受け取る(無ければ今日)
+    from datetime import date
+    target_date = request.data.get('target_date', str(date.today()))
+
     tasks = Task.objects.filter(
         user=request.user,
-        is_completed=False
+        is_completed=False,
+        due_date=target_date # 日付でフィルター
     ).values(
         'id', 'title', 'description', 'category',
         'due_date', 'start_time', 'end_time', 'priority'
@@ -30,22 +35,35 @@ def analyze_and_prioritize(request):
             {'error': 'タスクがありません'},
             status=status.HTTP_400_BAD_REQUEST
         )
+    
+    # 時刻あり・なしで分けて整理
+    timed_tasks = [t for t in task_list if t['start_time']]
+    untimed_tasks = [ t for t in task_list if not t['start_time']]
 
-    # タスク情報を文字列に変換
-    tasks_text = '\n'.join([
+    timed_text = '\n'.join([
+        f"- ID:{t['id']} [{t['category']}] {t['title']} "
+        f"{str(t['start_time'])[:5]}〜{str(t['end_time'])[:5] if t['end_time'] else '?'}"
+        for t in timed_tasks
+    ]) or 'なし'
+
+    untimed_text = '\n'.join([
         f"- ID:{t['id']} [{t['category']}] {t['title']}"
-        f"{' 期限:' + str(t['due_date']) if t['due_date'] else ''}"
-        f"{' ' + str(t['start_time'])[:5] + '〜' + str(t['end_time'])[:5] if t['start_time'] and t['end_time'] else ''}"
-        for t in task_list
-    ])
+        for t in untimed_tasks
+    ]) or 'なし'
 
     prompt = f"""あなたは個人のスケジュール管理をサポートするAIアシスタントです。
-以下のタスク一覧を分析し、重要度・インパクト・締め切りを考慮して優先順位を提案してください。
+{target_date} のタスクを分析し、優先順位を提案してください。
 
-タスク一覧:
-{tasks_text}
+【時刻が決まっている予定】
+{timed_text}
 
-以下のJSON形式のみで回答してください。説明文は不要です。
+【時刻未定のタスク】
+{untimed_text}
+
+時刻が決まっている予定も含めてすべてのタスクに優先順位をつけてください。
+時刻が決まっている予定は時間順を考慮し、時刻未定のタスクは重要度・インパクトを考慮して順位を決めてください。
+
+以下のJSON形式のみで回答してください。説明文やマークダウンは不要です。
 {{
   "prioritized_tasks": [
     {{
@@ -54,8 +72,9 @@ def analyze_and_prioritize(request):
       "reason": "優先する理由（30文字以内）"
     }}
   ],
-  "summary": "全体のスケジュールに関する一言アドバイス（50文字以内）"
+  "summary": "{target_date} のスケジュールに関する一言アドバイス（50文字以内）"
 }}"""
+    
     response = model.generate_content(prompt)
     # レスポンスが空の場合のチェック
     if not response or not response.text:
@@ -65,7 +84,7 @@ def analyze_and_prioritize(request):
         )
 
     response_text = response.text.strip()
-    
+
     # Geminiがマークダウンのコードブロックで返す場合の対処
     if response_text.startswith('```'):
         response_text = response_text.split('```')[1]
