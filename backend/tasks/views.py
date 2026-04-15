@@ -7,7 +7,34 @@ class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Task.objects.filter(user=self.request.user)
+        queryset = Task.objects.filter(user=self.request.user)
+
+        # 日付フィルター
+        date = self.request.query_params.get('date')
+        no_date = self.request.query_params.get('no_date')
+        if no_date == 'true':
+            queryset = queryset.filter(due_date__isnull=True)
+        elif date:
+            queryset = queryset.filter(due_date=date)
+
+        # カテゴリフィルター
+        category = self.request.query_params.get('category')
+        if category:
+            queryset = queryset.filter(category=category)
+
+        # 未完了のみ絞り込み
+        incomplete_only = self.request.query_params.get('incomplete_only')
+        if incomplete_only == 'true':
+            queryset = queryset.filter(is_completed=False)
+
+        # ソート順
+        sort = self.request.query_params.get('sort', 'asc')
+        if sort == 'desc':
+            queryset = queryset.order_by('-due_date', '-created_at')
+        else:
+            queryset = queryset.order_by('due_date', 'created_at')
+
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
